@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import User from "../models/User.js";
 import { generateTokens } from "../utils/token.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import AppError from "../utils/AppError.js";
 
 const router = express.Router();
 
@@ -47,9 +48,13 @@ router.post("/login", async (req, res) => {
       throw new AppError("Missing phone or password", 422, "AUTH_INPUT_ERROR");
     }
 
+
+    const users = await User.find({ status: 1 });
+    console.log("users: ", users)
+
     const user = await User.findOne({ phone });
     if (!user) {
-      throw new AppError("Incorrect username or password", 401, "AUTH_001");
+      throw new AppError("Incorrect phone", 401, "AUTH_001");
     }
 
     const match = await bcrypt.compare(password, user.password);

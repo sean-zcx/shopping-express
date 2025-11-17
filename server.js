@@ -30,6 +30,6 @@ app.use(notFoundHandler);
 // 错误处理（必须是最后一个）
 app.use(errorHandler);
 
-app.listen(3000, () => {
+app.listen(3000, "0.0.0.0",  () => {
   console.log("Server running on http://localhost:3000");
 });

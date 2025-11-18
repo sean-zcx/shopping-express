@@ -16,7 +16,7 @@ router.get("/", (req, res) => {
  * Register
  */
 router.post("/register", async (req, res) => {
-    const { phone, email, username, password } = req.body;
+    const { phone, email, username, password, first_name, last_name } = req.body;
 
     const existed = await User.findOne({ email });
     if (existed) return res.status(400).json({ msg: "Email already used" });
@@ -28,8 +28,8 @@ router.post("/register", async (req, res) => {
         phone,
         email,
         username,
-        first_name: "",
-        last_name: "",
+        first_name,
+        last_name,
         avatar_url: "assets/images/demo_avatars/1.jpg",
         password: hashed
     });

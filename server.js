@@ -13,13 +13,58 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 import mongoose from "mongoose";
 
+import admin from "firebase-admin";
+import { readFile } from "fs/promises";
+import path from "path";
+import { fileURLToPath } from 'url';
+
 
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(responseWrapper);
 
+
+// 用 ESM 的方式获取 __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// 读取 serviceAccountKey.json
+const serviceAccount = JSON.parse(
+  await readFile(path.join(__dirname, "./server/test-proj-abc123-firebase-adminsdk-fbsvc-b90721074b.json"), "utf8")
+);
+// 初始化 Firebase Admin
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+// 推送 API：POST /send-notification
+app.post("/send-notification", async (req, res) => {
+  const { token, title, body } = req.body;
+
+  if (!token || !title || !body) {
+    return res.status(400).json({ message: "Missing parameters" });
+  }
+
+  const message = {
+    token,
+    notification: {
+      title,
+      body
+    }
+  };
+
+  try {
+    const response = await admin.messaging().send(message);
+    console.log("👍 Successfully sent message:", response);
+    res.json({ success: true, response });
+  } catch (error) {
+    console.error("🔥 Error sending message:", error);
+    res.status(500).json({ success: false, error });
+  }
+});
+
+
+app.use(responseWrapper);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));

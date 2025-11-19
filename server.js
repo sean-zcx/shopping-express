@@ -39,7 +39,7 @@ admin.initializeApp({
 
 // 推送 API：POST /send-notification
 app.post("/send-notification", async (req, res) => {
-  const { token, title, body } = req.body;
+  const { token, guid, title, body } = req.body;
 
   if (!token || !title || !body) {
     return res.status(400).json({ message: "Missing parameters" });
@@ -49,7 +49,11 @@ app.post("/send-notification", async (req, res) => {
     token,
     notification: {
       title,
-      body
+      body,
+    },
+    data: {
+      type: "product_detail",
+      guid
     }
   };
 

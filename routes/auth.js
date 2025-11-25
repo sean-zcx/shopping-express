@@ -38,6 +38,53 @@ router.post("/register", async (req, res) => {
 });
 
 /**
+ * Firebase Login
+ */
+router.post("/firebase-login", async (req, res) => {
+    console.log("Login was called");
+    const { uid } = req.body;
+
+    if (!uid) {
+      throw new AppError("Missing uid", 422, "AUTH_INPUT_ERROR");
+    }
+
+
+    const users = await User.find({ status: 1 });
+    console.log("users: ", users)
+
+    const user = await User.findOne({ uid });
+    if (!user) {
+      throw new AppError("Incorrect uid", 401, "AUTH_001");
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ msg: "Incorrect password" });
+
+    const { access_token, refresh_token } = generateTokens(user);
+
+    const response = {
+        access_token,
+        refresh_token,
+        token_type: "Bearer",
+        expires_in: parseInt(process.env.TOKEN_EXPIRES_IN),
+        issued_at: new Date().toISOString(),
+        user: {
+            guid: user.guid,
+            phone: user.phone,
+            email: user.email,
+            username: user.username,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            avatar_url: user.avatar_url,
+            status: user.status,
+            created_at: user.created_at,
+            updated_at: user.updated_at
+        }
+    };
+    res.sendSuccess(response);
+});
+
+/**
  * Login
  */
 router.post("/login", async (req, res) => {

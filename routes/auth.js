@@ -41,7 +41,7 @@ router.post("/register", async (req, res) => {
  * Firebase Login
  */
 router.post("/firebase-login", async (req, res) => {
-    console.log("Login was called");
+    console.log("Firebase Login was called");
     const { uid } = req.body;
 
     if (!uid) {
@@ -57,8 +57,8 @@ router.post("/firebase-login", async (req, res) => {
       throw new AppError("Incorrect uid", 401, "AUTH_001");
     }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(401).json({ msg: "Incorrect password" });
+    // const match = await bcrypt.compare(password, user.password);
+    // if (!match) return res.status(401).json({ msg: "Incorrect password" });
 
     const { access_token, refresh_token } = generateTokens(user);
 
@@ -69,7 +69,7 @@ router.post("/firebase-login", async (req, res) => {
         expires_in: parseInt(process.env.TOKEN_EXPIRES_IN),
         issued_at: new Date().toISOString(),
         user: {
-            guid: user.guid,
+            uid: user.uid,
             phone: user.phone,
             email: user.email,
             username: user.username,

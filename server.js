@@ -6,6 +6,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/product.js";
 import categoryRoutes from "./routes/category.js";
+import cartRoutes from "./routes/cart.js";
 
 import { responseWrapper } from "./middleware/responseWrapper.js";
 import { notFoundHandler } from "./middleware/notFoundHandler.js";
@@ -77,6 +78,7 @@ mongoose.connect(process.env.MONGO_URI)
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/categories", categoryRoutes);
+app.use("/cart", cartRoutes);
 
 // 404 handler（路由之后）
 app.use(notFoundHandler);

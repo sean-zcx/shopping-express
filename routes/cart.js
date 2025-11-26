@@ -50,11 +50,11 @@ router.get("/:uid/cart-items", async (req, res, next) => {
 });
 
 /**
- * POST /cart/:uid/cart-items
+ * POST /cart/:uid/add-item
  * 为 uid 的购物车添加商品
+ * 请求体包含商品信息（product_guid, image_url, quantity, original_price, sale_price, selected）
  */
-// TODO: finish this
-router.post("/:uid/cart-items", async (req, res, next) => {
+router.post("/:uid/add-item", async (req, res, next) => {
   try {
     const uid = req.params.uid;
     const newItem = req.body;
@@ -73,9 +73,18 @@ router.post("/:uid/cart-items", async (req, res, next) => {
         updated_at: new Date()
       });
     } else {
-      // 如果有购物车，则添加商品到 cart_items 数组
-      cart.cart_items.push(newItem);
-      cart.updated_at = new Date();
+      // 如果有购物车，则查找是否已有该商品
+      const existingItemIndex = cart.cart_items.findIndex(
+        item => item.product_guid === newItem.product_guid
+      );
+      if (existingItemIndex !== -1) {
+        // 如果商品已存在，则更新数量和更新时间
+        cart.cart_items[existingItemIndex].quantity += newItem.quantity;
+        cart.cart_items[existingItemIndex].updated_at = new Date();
+      } else {
+        // 如果商品不存在，则添加新商品
+        cart.cart_items.push(newItem);
+      }
     }
 
     await cart.save();

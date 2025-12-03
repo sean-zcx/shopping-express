@@ -10,8 +10,6 @@ const userSchema = new mongoose.Schema({
   avatar_url: String,
   status: { type: Number, default: 1 },
 
-  password: { type: String, required: true },
-
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }
 });

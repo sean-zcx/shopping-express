@@ -1,14 +1,15 @@
 import jwt from "jsonwebtoken";
 
-export const generateTokens = (user) => {
+export const generateTokens = (uid) => {
+  console.log('[token] generatetokens: uid', JSON.stringify(uid, null, 2))
   const access_token = jwt.sign(
-    { guid: user.guid, email: user.email },
+    {uid},
     process.env.JWT_ACCESS_SECRET,
     { expiresIn: `${process.env.TOKEN_EXPIRES_IN}s` }
   );
 
   const refresh_token = jwt.sign(
-    { guid: user.guid, email: user.email },
+    {uid},
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: "7d" }
   );

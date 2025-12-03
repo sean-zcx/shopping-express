@@ -17,7 +17,7 @@ router.get("/", (req, res) => {
  * Register
  */
 router.post("/register", async (req, res) => {
-    const { phone, email, username, uid, first_name, last_name, avatar_url } = req.body;
+    const { phone, email, username, uid, first_name, last_name } = req.body;
 
     const existed = await User.findOne({ uid });
     if (existed) return res.status(400).json({ msg: "UID already used" });
@@ -29,13 +29,14 @@ router.post("/register", async (req, res) => {
         username,
         first_name,
         last_name,
-        avatar_url,
         status: 1,
         created_at: new Date(),
         updated_at: new Date(),
     });
-
-    await Cart.create({ uid: user.uid });
+    const cart = await Cart.findOne({ uid });
+    if (!cart) {
+        Cart.create({ uid: user.uid });
+    }
 
     console.log('[auth] register: user', JSON.stringify(user, null, 2));
 

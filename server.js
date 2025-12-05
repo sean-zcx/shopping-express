@@ -3,6 +3,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 
+import adminRoutes from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/product.js";
 import categoryRoutes from "./routes/category.js";
@@ -75,6 +76,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error("MongoDB connection error:", err));
 
 // Routes
+app.use("/admin", adminRoutes);
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/categories", categoryRoutes);

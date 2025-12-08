@@ -94,15 +94,18 @@ router.post("/firebase-login", async (req, res) => {
     console.log('[auth] firebase-login: uid', uid);
 
 
-    const user = await User.findOne({ uid });
+    let user = await User.findOne({ uid });
     console.log('[auth] firebase-login: user', user);
 
     if (!user) {
         user = await User.create({
-            firebaseUid: uid,
+            uid,
             email,
-            name,
-            avatar: picture,
+            username: name,
+            avatar_url: picture,
+            status: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
         });
     }
 

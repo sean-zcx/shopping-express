@@ -6,6 +6,7 @@ import Cart from "../models/Cart.js";
 import { generateTokens } from "../utils/token.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import AppError from "../utils/AppError.js";
+import admin from "firebase-admin";
 
 const router = express.Router();
 
@@ -17,7 +18,24 @@ router.get("/", (req, res) => {
  * Register
  */
 router.post("/register", async (req, res) => {
-    const { phone, email, username, uid, first_name, last_name } = req.body;
+    const { phone, email, username, id_token, first_name, last_name } = req.body;
+
+    if (!id_token) {
+        throw new AppError("Missing id_token", 422, "AUTH_INPUT_ERROR");
+    }
+
+    // 验证 Firebase ID Token
+    var uid;
+    try {
+        // 使用 Firebase Admin SDK 验证 ID Token
+        const decodedToken = await admin.auth().verifyIdToken(id_token);
+        console.log('[auth] firebase-login: decodedToken', JSON.stringify(decodedToken, null, 2));
+        uid = decodedToken.uid;
+        console.log('[auth] firebase-login: uid', uid);
+    } catch (error) {
+        console.error("Error verifying Firebase ID token:", error);
+        throw new AppError("Invalid ID token", 401, "AUTH_INVALID_TOKEN");
+    }
 
     const existed = await User.findOne({ uid });
     if (existed) return res.status(400).json({ msg: "UID already used" });
@@ -58,11 +76,25 @@ router.post("/register", async (req, res) => {
  */
 router.post("/firebase-login", async (req, res) => {
     console.log("Firebase Login was called");
-    const { uid } = req.body;
+    const { id_token } = req.body;
 
-    if (!uid) {
-        throw new AppError("Missing uid", 422, "AUTH_INPUT_ERROR");
+    if (!id_token) {
+        throw new AppError("Missing id_token", 422, "AUTH_INPUT_ERROR");
     }
+
+    // 验证 Firebase ID Token
+    var uid;
+    try {
+        // 使用 Firebase Admin SDK 验证 ID Token
+        const decodedToken = await admin.auth().verifyIdToken(id_token);
+        console.log('[auth] firebase-login: decodedToken', JSON.stringify(decodedToken, null, 2));
+        uid = decodedToken.uid;
+        console.log('[auth] firebase-login: uid', uid);
+    } catch (error) {
+        console.error("Error verifying Firebase ID token:", error);
+        throw new AppError("Invalid ID token", 401, "AUTH_INVALID_TOKEN");
+    }
+
 
     const user = await User.findOne({ uid });
     console.log('[auth] firebase-login: user', user);

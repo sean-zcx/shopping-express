@@ -21,7 +21,9 @@ router.get("/cart-items", authMiddleware, async (req, res, next) => {
     console.log("ALL KEYS:", Object.keys(resp._doc));      // 字段名
 
     if (!resp) {
-      return res.sendError("Cart Items Not Found", "CART_ITEMS_404", 404);
+      // 创建一个新的购物车
+      const newCart = await Cart.create({ uid, cart_items: [] });
+      return res.sendSuccess(newCart.cart_items);
     }
     const items = resp.cart_items;
     console.log('items', items)

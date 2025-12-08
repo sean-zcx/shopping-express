@@ -83,24 +83,27 @@ router.post("/firebase-login", async (req, res) => {
     }
 
     // 验证 Firebase ID Token
-    var uid;
-    try {
-        // 使用 Firebase Admin SDK 验证 ID Token
-        const decodedToken = await admin.auth().verifyIdToken(id_token);
-        console.log('[auth] firebase-login: decodedToken', JSON.stringify(decodedToken, null, 2));
-        uid = decodedToken.uid;
-        console.log('[auth] firebase-login: uid', uid);
-    } catch (error) {
-        console.error("Error verifying Firebase ID token:", error);
-        throw new AppError("Invalid ID token", 401, "AUTH_INVALID_TOKEN");
-    }
+    // 使用 Firebase Admin SDK 验证 ID Token
+    const decodedToken = await admin.auth().verifyIdToken(id_token);
+    console.log('[auth] firebase-login: decodedToken', JSON.stringify(decodedToken, null, 2));
+
+    const uid = decodedToken.uid;
+    const email = decodedToken.email;
+    const name = decodedToken.name;
+    const picture = decodedToken.picture;
+    console.log('[auth] firebase-login: uid', uid);
 
 
     const user = await User.findOne({ uid });
     console.log('[auth] firebase-login: user', user);
 
     if (!user) {
-        throw new AppError("Incorrect uid", 401, "AUTH_001");
+        user = await User.create({
+            firebaseUid: uid,
+            email,
+            name,
+            avatar: picture,
+        });
     }
 
     const { access_token, refresh_token } = generateTokens(uid);

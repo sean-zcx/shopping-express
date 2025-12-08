@@ -17,14 +17,14 @@ router.get("/cart-items", authMiddleware, async (req, res, next) => {
     // 获取该用户的购物车商品列表
     const resp = await Cart.findOne({ uid });
 
-    console.log("RESP:", JSON.stringify(resp, null, 2));   // 完整结构
-    console.log("ALL KEYS:", Object.keys(resp._doc));      // 字段名
-
     if (!resp) {
       // 创建一个新的购物车
       const newCart = await Cart.create({ uid, cart_items: [] });
       return res.sendSuccess(newCart.cart_items);
     }
+
+    console.log("RESP:", JSON.stringify(resp, null, 2));   // 完整结构
+    console.log("ALL KEYS:", Object.keys(resp._doc));      // 字段名
     const items = resp.cart_items;
     console.log('items', items)
 

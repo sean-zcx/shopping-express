@@ -179,18 +179,4 @@ router.post("/firebase-login", async (req, res) => {
 //     };
 //     res.sendSuccess(response);
 // });
-
-/**
- * Protected Profile
- */
-router.get("/profile", authMiddleware, async (req, res) => {
-    const uid = req.auth.uid;
-    const user = await User.findOne({ uid });
-
-    res.json({
-        msg: "Profile loaded",
-        user
-    });
-});
-
 export default router;

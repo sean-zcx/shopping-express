@@ -9,6 +9,7 @@ import productRoutes from "./routes/product.js";
 import categoryRoutes from "./routes/category.js";
 import cartRoutes from "./routes/cart.js";
 import userRoutes from "./routes/user.js";
+import addressRoutes from "./routes/address.js";
 
 import { responseWrapper } from "./middleware/responseWrapper.js";
 import { notFoundHandler } from "./middleware/notFoundHandler.js";
@@ -83,6 +84,7 @@ app.use("/products", productRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/cart", cartRoutes);
 app.use("/user", userRoutes);
+app.use("/address", addressRoutes);
 
 // 404 handler（路由之后）
 app.use(notFoundHandler);

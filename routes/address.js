@@ -45,7 +45,7 @@ router.get("/", authMiddleware, async (req, res, next) => {
     let book = await AddressBook.findOne({ userId: uid });
     if (!book) {
         book = await AddressBook.create({
-            userId: req.user.userId,
+            userId: uid,
             addresses: []
         });
     }

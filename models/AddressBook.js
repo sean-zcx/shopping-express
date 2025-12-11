@@ -16,7 +16,7 @@ const addressSchema = new mongoose.Schema(
 
 const addressBookSchema = new mongoose.Schema(
     {
-        userId: { type: String, required: true },
+        uid: { type: String, required: true },
         addresses: [addressSchema],
     },
     { timestamps: true }

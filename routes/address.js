@@ -14,19 +14,19 @@ router.post("/", authMiddleware, async (req, res, next) => {
     const uid = req.auth.uid;
     const body = req.body;
 
-    let book = await AddressBook.findOne({ userId: uid });
+    let book = await AddressBook.findOne({ uid });
 
     // 若不存在，创建一个新的 addressBook
     if (!book) {
         book = await AddressBook.create({
-            userId: uid,
+            uid,
             addresses: []
         });
     }
 
     // 如果本次新增设置为默认地址，则清除旧默认
-    if (body.isDefault) {
-        book.addresses.forEach(a => (a.isDefault = false));
+    if (body.is_default) {
+        book.addresses.forEach(a => (a.is_default = false));
     }
 
     body.id = uuidv4();  // 生成唯一 ID
@@ -46,10 +46,10 @@ router.post("/", authMiddleware, async (req, res, next) => {
  */
 router.get("/", authMiddleware, async (req, res, next) => {
     const uid = req.auth.uid;
-    let book = await AddressBook.findOne({ userId: uid });
+    let book = await AddressBook.findOne({ uid });
     if (!book) {
         book = await AddressBook.create({
-            userId: uid,
+            uid,
             addresses: []
         });
     }
@@ -65,16 +65,16 @@ router.get("/", authMiddleware, async (req, res, next) => {
 
 router.put("/:id", authMiddleware, async (req, res, next) => {
     const uid = req.auth.uid;
-    const { isDefault } = req.body;
+    const { is_default } = req.body;
     const { id } = req.params;
 
-    const book = await AddressBook.findOne({ userId: uid });
+    const book = await AddressBook.findOne({ uid });
 
     if (!book) return res.status(404).json({ error: "AddressBook not found" });
 
     // 清除旧默认
-    if (isDefault) {
-        book.addresses.forEach(a => a.isDefault = false);
+    if (is_default) {
+        book.addresses.forEach(a => a.is_default = false);
     }
 
     const address = book.addresses.find(a => a.id === id);
@@ -96,7 +96,7 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
 router.delete("/:id", authMiddleware, async (req, res, next) => {
     const uid = req.auth.uid;
     const { id } = req.params;
-    const book = await AddressBook.findOne({ userId: uid });
+    const book = await AddressBook.findOne({ uid });
 
     if (!book) return res.status(404).json({ error: "AddressBook not found" });
 
@@ -115,7 +115,7 @@ router.delete("/:id", authMiddleware, async (req, res, next) => {
 //  */
 // router.get("/default", authMiddleware, async (req, res, next) => {
 //     const uid = req.auth.uid;
-//     const address = await Address.findOne({ userId: uid, isDefault: true });
+//     const address = await Address.findOne({ uid, is_default: true });
 
 //     return res.sendSuccess(address);
 // });
@@ -134,19 +134,19 @@ router.post("/test/", async (req, res, next) => {
     const body = req.body;
     const uid = body.uid;
 
-    let book = await AddressBook.findOne({ userId: uid });
+    let book = await AddressBook.findOne({ uid });
 
     // 若不存在，创建一个新的 addressBook
     if (!book) {
         book = await AddressBook.create({
-            userId: uid,
+            uid,
             addresses: []
         });
     }
 
     // 如果本次新增设置为默认地址，则清除旧默认
-    if (body.isDefault) {
-        book.addresses.forEach(a => (a.isDefault = false));
+    if (body.is_default) {
+        book.addresses.forEach(a => (a.is_default = false));
     }
 
     body.id = uuidv4();  // 生成唯一 ID
@@ -165,10 +165,10 @@ router.post("/test/", async (req, res, next) => {
  */
 router.get("/test", async (req, res, next) => {
     const uid = req.body.uid;
-    let book = await AddressBook.findOne({ userId: uid });
+    let book = await AddressBook.findOne({ uid });
     if (!book) {
         book = await AddressBook.create({
-            userId: uid,
+            uid,
             addresses: []
         });
     }
@@ -183,18 +183,17 @@ router.get("/test", async (req, res, next) => {
  */
 
 router.put("/test/:id", async (req, res, next) => {
-    const { uid, isDefault } = req.body;
+    const { uid, is_default } = req.body;
     const { id } = req.params;
     console.log('[address], test update uid:', uid)
     console.log('[address], test update addressId:', id)
-    console.log('[address], test update isDefault:', isDefault)
-
-    const book = await AddressBook.findOne({ userId: uid });
+    console.log('[address], test update is_default:', is_default)
+    const book = await AddressBook.findOne({ uid });
     if (!book) return res.status(404).json({ error: "AddressBook not found" });
 
     // 清除旧默认
-    if (isDefault) {
-        book.addresses.forEach(a => a.isDefault = false);
+    if (is_default) {
+        book.addresses.forEach(a => a.is_default = false);
     }
 
     const address = book.addresses.find(a => a.id === id);
@@ -215,7 +214,7 @@ router.put("/test/:id", async (req, res, next) => {
 router.delete("/test/:id", async (req, res, next) => {
     const uid = req.body.uid;
     const { id } = req.params;
-    const book = await AddressBook.findOne({ userId: uid });
+    const book = await AddressBook.findOne({ uid });
 
     if (!book) return res.status(404).json({ error: "AddressBook not found" });
 

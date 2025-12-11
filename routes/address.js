@@ -49,7 +49,8 @@ router.get("/", authMiddleware, async (req, res, next) => {
             addresses: []
         });
     }
-    return res.sendSuccess(book);
+    const addresses = book.addresses;
+    return res.sendSuccess(addresses);
 });
 
 /**
@@ -79,7 +80,9 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
 
     await book.save();
 
-    return res.sendSuccess(book);
+    const addresses = book.addresses;
+
+    return res.sendSuccess(addresses);
 });
 
 /**
@@ -97,19 +100,21 @@ router.delete("/:id", authMiddleware, async (req, res, next) => {
 
     await book.save();
 
-    return res.sendSuccess(book);
+    const addresses = book.addresses;
+
+    return res.sendSuccess(addresses);
 });
 
-/**
- * Get only default address
- * GET /address/default
- */
-router.get("/default", authMiddleware, async (req, res, next) => {
-    const uid = req.auth.uid;
-    const address = await Address.findOne({ userId: uid, isDefault: true });
+// /**
+//  * Get only default address
+//  * GET /address/default
+//  */
+// router.get("/default", authMiddleware, async (req, res, next) => {
+//     const uid = req.auth.uid;
+//     const address = await Address.findOne({ userId: uid, isDefault: true });
 
-    return res.sendSuccess(address);
-});
+//     return res.sendSuccess(address);
+// });
 
 
 

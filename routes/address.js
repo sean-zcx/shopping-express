@@ -29,6 +29,8 @@ router.post("/", authMiddleware, async (req, res, next) => {
         book.addresses.forEach(a => (a.isDefault = false));
     }
 
+    body.id = uuidv4();  // 生成唯一 ID
+
     book.addresses.push(body);
     await book.save();
 

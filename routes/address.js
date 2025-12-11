@@ -32,7 +32,9 @@ router.post("/", authMiddleware, async (req, res, next) => {
     book.addresses.push(body);
     await book.save();
 
-    return res.sendSuccess(book);
+    const addresses = book.addresses;
+
+    return res.sendSuccess(addresses);
 });
 
 /**

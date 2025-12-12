@@ -1,28 +1,85 @@
 import mongoose from "mongoose";
 
+//
+// ① Options Schema（如尺寸、颜色）
+//
+const productOptionSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },      // 如 "size"
+    values: { type: [String], required: true },  // 如 ["S","M","L"]
+  },
+  { _id: false }
+);
+
+//
+// ② Variants Schema（SKU 组合）
+//
+const productVariantSchema = new mongoose.Schema(
+  {
+    // 组合，如 { size:"M", color:"Red" }
+    combination: {
+      type: Map,
+      of: String,
+      required: true
+    },
+
+    // 如果价格为 null => unavailable（前端自动识别）
+    originalPrice: { type: Number, default: null },
+    salePrice: { type: Number, default: null },
+
+    // 是否可购买
+    available: { type: Boolean, default: false },
+
+    // 未来扩展用:
+    skuCode: { type: String },  // SKU 编码（可选）
+    stock: { type: Number, default: 0 }, // 库存（可选）
+  },
+  { _id: false }
+);
+
+
 const productSchema = new mongoose.Schema({
-  guid: String,
-  name: String,
-  summary: String,
-  description: String,
+  /// 基础信息
+  guid: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  summary: { type: String },
+  description: { type: String },
 
-  display_status: Number,    // <-- 热门 / 首页展示状态
-  sale_status: Number,
-  category_id: Number,
+  display_status: { type: Number, required: true },    // <-- 热门 / 首页展示状态
+  sale_status: { type: Number, required: true },
+  category_id: { type: Number },
 
-  original_price: Number,
-  sale_price: Number,
-  sold_count: Number,
+  /// Single 商品价格
+  /// 对于 variant 模式可能不再使用
+  original_price: { type: Number, required: true },
+  sale_price: { type: Number },
 
-  image_url: String,
-  gallery: [String],
+  sold_count: { type: Number },
 
-  specs: {
-    display: String,
-    chipset: String,
-    memory: String,
-    battery: String,
-    os: String,
+  image_url: { type: String },
+  gallery: { type: [String], default: [] },
+
+  /// 规格参数
+  specs: { type: Map, of: mongoose.Schema.Types.Mixed },
+
+  /// 商品类型："single" 或 "variant"
+  productType: {
+    type: String,
+    enum: ["single", "variant"],
+    required: true,
+    default: "single",
+  },
+
+  /// 可选项
+  options: {
+    type: [productOptionSchema],
+    default: [],
+  },
+
+  /// SKU 组合列表
+  variants: {
+    type: [productVariantSchema],
+    default: []
   },
 
   created_at: Date,

@@ -4,6 +4,7 @@ const cartItemSchema = new mongoose.Schema({
   product_guid: { type: String, required: true },
   name: { type: String, required: true },
   image_url: String,
+  variant_combination: { type: Map, of: String }, // SKU 组合
   quantity: Number,
   original_price: Number,
   sale_price: Number,

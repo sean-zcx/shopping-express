@@ -64,6 +64,25 @@ router.post("/update", authMiddleware, async (req, res, next) => {
     console.log(`Updating cart for UID: ${uid}, Product GUID: ${productGuid}, Quantity: ${quantity}`);
     console.log("Product Found:", product);
 
+    // 校验 product_type
+    if (product.product_type === 'variant') {
+      if (!variantCombination) {
+        return res.sendError(
+          "Variant selection required",
+          "VARIANT_REQUIRED",
+          400
+        );
+      }
+    } else {
+      if (variantCombination) {
+        return res.sendError(
+          "Variant not supported for this product",
+          "VARIANT_NOT_ALLOWED",
+          400
+        );
+      }
+    }
+
     // 2️⃣ 查购物车
     // 查找该用户的购物车（一定能找到，注册时创建）
     let cart = await Cart.findOne({ uid });
@@ -106,14 +125,35 @@ router.post("/update", authMiddleware, async (req, res, next) => {
     let salePrice;
 
     if (variantCombination) {
-      const variant = product.variants.find(v =>
-        Object.entries(variantCombination).every(
-          ([k, v2]) => v.combination[k] === v2
-        )
-      );
+      const variant = product.variants.find(v => {
+        const combo = v.combination;
+
+        // 1️⃣ 键数量必须一致
+        if (Object.keys(combo).length !== Object.keys(variantCombination).length) {
+          return false;
+        }
+
+        // 2️⃣ 每个 key-value 都必须一致
+        return Object.entries(combo).every(
+          ([k, v2]) => variantCombination[k] === v2
+        );
+      });
+
+      console.log('variant:', variant);
 
       if (!variant || !variant.available) {
         return res.sendError("Variant unavailable", "VARIANT_404", 400);
+      }
+      
+      if (
+        variant.original_price == null ||
+        variant.sale_price == null
+      ) {
+        return res.sendError(
+          "Variant price unavailable",
+          "VARIANT_PRICE_INVALID",
+          400
+        );
       }
 
       originalPrice = variant.original_price;

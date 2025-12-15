@@ -39,16 +39,23 @@ router.get("/cart-items", authMiddleware, async (req, res, next) => {
 
 /**
 * POST /cart/update
-* 为 uid 的购物车添加商品
-* 请求体包含商品信息（product_guid, image_url, quantity, original_price, sale_price, selected）
+* SKU-aware cart upsert
 */
 router.post("/update", authMiddleware, async (req, res, next) => {
   try {
     console.log("REQUEST BODY:", req.body);
     const uid = req.auth.uid;
-    const productGuid = req.body.productGuid;
-    const quantity = req.body.quantity;
+    const { productGuid, quantity, variantCombination } = req.body;
 
+    if (!productGuid || typeof quantity !== "number") {
+      return res.sendError("Invalid request", "CART_400", 400);
+    }
+
+    if (quantity < 0) {
+      return res.sendError("Quantity cannot be negative", "CART_400", 400);
+    }
+
+    // 1️⃣ 查商品
     const product = await Product.findOne({ guid: productGuid });
     if (!product) {
       return res.sendError("Product Not Found", "PRODUCT_404", 404);
@@ -57,58 +64,80 @@ router.post("/update", authMiddleware, async (req, res, next) => {
     console.log(`Updating cart for UID: ${uid}, Product GUID: ${productGuid}, Quantity: ${quantity}`);
     console.log("Product Found:", product);
 
-
+    // 2️⃣ 查购物车
     // 查找该用户的购物车（一定能找到，注册时创建）
-    let resp = await Cart.findOne({ uid });
-    console.log("RESP:", JSON.stringify(resp, null, 2));
+    let cart = await Cart.findOne({ uid });
+    if (!cart) {
+      return res.sendError("Cart Not Found", "CART_404", 404);
+    }
+    console.log("Cart:", JSON.stringify(cart, null, 2));
 
+    // 3️⃣ SKU 匹配（productGuid + variantCombination）
     // 查找是否已有该商品
-    const existingItemIndex = resp.cart_items.findIndex(
-      item => item.product_guid === productGuid
+    const existingIndex = cart.cart_items.findIndex(
+      item => {
+        const sameProduct = item.product_guid === productGuid;
+        const sameVariant =
+          JSON.stringify(item.variant_combination || null) ===
+          JSON.stringify(variantCombination || null);
+        return sameProduct && sameVariant;
+      }
     );
-    if (existingItemIndex !== -1) {
-      const p = resp.cart_items[existingItemIndex];
-      console.log("Existing Cart Item:", p);
 
-      // 如果数量为0，则从购物车中移除该商品
-      if (quantity === 0) {
-        resp.cart_items.splice(existingItemIndex, 1);
-        console.log(`Removed product ${productGuid} from cart.`);
+    // 4️⃣ quantity = 0 → 删除 SKU
+    if (quantity === 0) {
+      if (existingIndex !== -1) {
+        cart.cart_items.splice(existingIndex, 1);
       }
-      // 如果数量不为0，则更新该商品的信息
-      else {
-
-        p.product_guid = product.guid;
-        p.name = product.name;
-        p.image_url = product.image_url;
-        p.original_price = product.original_price;
-        p.sale_price = product.sale_price;
-        p.selected = true;
-
-        // 如果商品已存在，则更新数量和更新时间
-        p.quantity = quantity;
-        p.updated_at = new Date();
-      }
-    } else {
-      // 如果商品不存在，则添加新商品
-      const p = {
-        product_guid: product.guid,
-        name: product.name,
-        quantity: quantity,
-        image_url: product.image_url,
-        original_price: product.original_price,
-        sale_price: product.sale_price,
-        selected: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      }
-
-      resp.cart_items.push(p);
-
+      await cart.save();
+      return res.sendSuccess(cart.cart_items);
     }
 
-    await resp.save();
-    return res.sendSuccess(resp.cart_items);
+    // 5️⃣ 已存在 SKU → 只更新数量
+    if (existingIndex !== -1) {
+      cart.cart_items[existingIndex].quantity = quantity;
+      cart.cart_items[existingIndex].updated_at = new Date();
+      await cart.save();
+      return res.sendSuccess(cart.cart_items);
+    }
+
+    // 6️⃣ 新 SKU → 锁价后加入
+    let originalPrice;
+    let salePrice;
+
+    if (variantCombination) {
+      const variant = product.variants.find(v =>
+        Object.entries(variantCombination).every(
+          ([k, v2]) => v.combination[k] === v2
+        )
+      );
+
+      if (!variant || !variant.available) {
+        return res.sendError("Variant unavailable", "VARIANT_404", 400);
+      }
+
+      originalPrice = variant.original_price;
+      salePrice = variant.sale_price;
+    } else {
+      originalPrice = product.original_price;
+      salePrice = product.sale_price;
+    }
+
+    cart.cart_items.push({
+      product_guid: product.guid,
+      name: product.name,
+      image_url: product.image_url,
+      variant_combination: variantCombination ?? null,
+      quantity,
+      original_price: originalPrice,
+      sale_price: salePrice,
+      selected: true,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+
+    await cart.save();
+    return res.sendSuccess(cart.cart_items);
   } catch (err) {
     next(err);
   }

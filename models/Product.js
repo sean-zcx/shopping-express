@@ -24,14 +24,14 @@ const productVariantSchema = new mongoose.Schema(
     },
 
     // 如果价格为 null => unavailable（前端自动识别）
-    originalPrice: { type: Number, default: null },
-    salePrice: { type: Number, default: null },
+    original_price: { type: Number, default: null },
+    sale_price: { type: Number, default: null },
 
     // 是否可购买
     available: { type: Boolean, default: false },
 
     // 未来扩展用:
-    skuCode: { type: String },  // SKU 编码（可选）
+    sku_code: { type: String },  // SKU 编码（可选）
     stock: { type: Number, default: 0 }, // 库存（可选）
   },
   { _id: false }
@@ -63,7 +63,7 @@ const productSchema = new mongoose.Schema({
   specs: { type: Map, of: mongoose.Schema.Types.Mixed },
 
   /// 商品类型："single" 或 "variant"
-  productType: {
+  product_type: {
     type: String,
     enum: ["single", "variant"],
     required: true,

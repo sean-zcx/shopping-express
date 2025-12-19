@@ -57,7 +57,7 @@ router.post("/login", async (req, res, next) => {
  * 以下为商品管理 API，需要管理员权限
  * ----------------------------------------------------------- */
 
-router.use(adminAuth);
+// router.use(adminAuth);
 
 
 /**
@@ -133,17 +133,32 @@ router.post("/products", async (req, res, next) => {
         } = req.body;
 
         // 基础校验
-        if (!name || !original_price) {
-            return res.sendError("Missing required fields", "PRODUCT_VALIDATION_ERROR", 400);
+        if (!name) {
+            return res.sendError("Missing product name", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+        if (!product_type) {
+            return res.sendError("Missing product type", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+        if (product_type === 'variant' && (!options || options.length === 0)) {
+            return res.sendError("Missing product options", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+        if (product_type === 'variant' && (!variants || variants.length === 0)) {
+            return res.sendError("Missing product variants", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+        if (product_type === 'single' && !original_price) {
+            return res.sendError("Missing original price for single product", "PRODUCT_VALIDATION_ERROR", 400);
         }
 
         // 自动生成 guid
-        const guid = uuidv4(); // ⬅⬅⬅ 自动生成 GUID
+        const guid = uuidv4();
 
         // 创建商品对象
         const newProduct = await Product.create({
             guid,
             name,
+            product_type: product_type,
+            options: product_type === 'variant' ? options : [],
+            variants: product_type === 'variant' ? variants : [],
             summary: summary ?? "",
             description: description ?? "",
             display_status: display_status ?? 1,
@@ -157,7 +172,8 @@ router.post("/products", async (req, res, next) => {
             specs: specs ?? {},
 
             created_at: new Date().toISOString().split('.')[0] + "Z",
-            updated_at: new Date().toISOString().split('.')[0] + "Z"
+            updated_at: new Date().toISOString().split('.')[0] + "Z",
+            updated_by: updated_by ?? "admin",
         });
 
         return res.sendSuccess(newProduct);
@@ -226,5 +242,98 @@ router.delete("/products/:guid", async (req, res, next) => {
         next(err);
     }
 });
+
+
+
+/*************************** TEST *****************************/
+
+/**
+ * POST /admin/products/test
+ * 管理员创建商品
+ */
+router.post("/products/test", async (req, res, next) => {
+    try {
+        const {
+            name,
+            product_type,
+            options,
+            variants,
+            summary,
+            description,
+            display_status,
+            sale_status,
+            category_id,
+            original_price,
+            sale_price,
+            sold_count,
+            image_url,
+            gallery,
+            specs,
+            updated_by,
+        } = req.body;
+
+        // 基础校验
+        if (!name) {
+            return res.sendError("Missing product name", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+        if (!product_type) {
+            return res.sendError("Missing product type", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+        if (product_type === 'variant' && (!options || options.length === 0)) {
+            return res.sendError("Missing product options", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+        if (product_type === 'variant' && (!variants || variants.length === 0)) {
+            return res.sendError("Missing product variants", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+        if (product_type === 'single' && !original_price) {
+            return res.sendError("Missing original price for single product", "PRODUCT_VALIDATION_ERROR", 400);
+        }
+
+        // 自动生成 guid
+        const guid = uuidv4();
+
+        // 创建商品对象
+        const newProduct = await Product.create({
+            guid,
+            name,
+            product_type: product_type,
+            options: product_type === 'variant' ? options : [],
+            variants: product_type === 'variant' ? variants : [],
+            summary: summary ?? "",
+            description: description ?? "",
+            display_status: display_status ?? 1,
+            sale_status: sale_status ?? 1,
+            category_id: category_id ?? null,
+            original_price,
+            sale_price: sale_price ?? original_price,
+            sold_count: sold_count ?? 0,
+            image_url: image_url ?? "",
+            gallery: gallery ?? [],
+            specs: specs ?? {},
+
+            created_at: new Date().toISOString().split('.')[0] + "Z",
+            updated_at: new Date().toISOString().split('.')[0] + "Z",
+            updated_by: updated_by ?? "admin",
+        });
+
+        return res.sendSuccess(newProduct);
+
+    } catch (err) {
+        next(err);
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default router;

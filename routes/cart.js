@@ -47,10 +47,12 @@ router.post("/update", authMiddleware, async (req, res, next) => {
     const uid = req.auth.uid;
     const { productGuid, quantity, variantCombination } = req.body;
 
-    if (!productGuid || typeof quantity !== "number") {
-      return res.sendError("Invalid request", "CART_400", 400);
+    if (!productGuid) {
+      return res.sendError("No product guid", "CART_400", 400);
     }
-
+    if (typeof quantity !== "number") {
+      return res.sendError("Invaild quantity", "CART_400", 400);
+    }
     if (quantity < 0) {
       return res.sendError("Quantity cannot be negative", "CART_400", 400);
     }
@@ -84,7 +86,7 @@ router.post("/update", authMiddleware, async (req, res, next) => {
     }
 
     // 2️⃣ 查购物车
-    // 查找该用户的购物车（一定能找到，注册时创建）
+    // 查找该用户的购物车
     let cart = await Cart.findOne({ uid });
     if (!cart) {
       // return res.sendError("Cart Not Found", "CART_404", 404);
@@ -201,7 +203,7 @@ router.post("/update", authMiddleware, async (req, res, next) => {
 
 /**
 * TEST
-* POST /cart/update
+* POST /cart/update/test
 * SKU-aware cart upsert
 */
 router.post("/update/test", async (req, res, next) => {
@@ -209,10 +211,12 @@ router.post("/update/test", async (req, res, next) => {
     console.log("REQUEST BODY:", req.body);
     const { uid, productGuid, quantity, variantCombination } = req.body;
 
-    if (!productGuid || typeof quantity !== "number") {
-      return res.sendError("Invalid request", "CART_400", 400);
+    if (!productGuid) {
+      return res.sendError("No product guid", "CART_400", 400);
     }
-
+    if (typeof quantity !== "number") {
+      return res.sendError("Invaild quantity", "CART_400", 400);
+    }
     if (quantity < 0) {
       return res.sendError("Quantity cannot be negative", "CART_400", 400);
     }
@@ -246,7 +250,7 @@ router.post("/update/test", async (req, res, next) => {
     }
 
     // 2️⃣ 查购物车
-    // 查找该用户的购物车（一定能找到，注册时创建）
+    // 查找该用户的购物车
     let cart = await Cart.findOne({ uid });
     if (!cart) {
       // 创建一个新的购物车
@@ -354,6 +358,38 @@ router.post("/update/test", async (req, res, next) => {
     next(err);
   }
 });
+
+
+/**
+ * GET /cart/cart-items/test
+ * 获取 uid 的购物车商品列表
+ */
+router.get("/cart-items/test", async (req, res, next) => {
+  try {
+    const uid = req.body.uid;
+
+    // 获取该用户的购物车商品列表
+    const resp = await Cart.findOne({ uid });
+
+    if (!resp) {
+      // 创建一个新的购物车
+      const newCart = await Cart.create({ uid, cart_items: [] });
+      return res.sendSuccess(newCart.cart_items);
+    }
+
+    console.log("RESP:", JSON.stringify(resp, null, 2));   // 完整结构
+    console.log("ALL KEYS:", Object.keys(resp._doc));      // 字段名
+    const items = resp.cart_items;
+    console.log('items', items)
+
+    // const cartItems = resp['cart_items'];
+
+    return res.sendSuccess(items);
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 
 export default router;

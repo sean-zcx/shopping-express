@@ -22,4 +22,24 @@ router.get("/", authMiddleware, async (req, res, next) => {
   }
 });
 
+/************************* TEST ****************************/
+/**
+ * GET 
+ * 获取用户简介
+ */
+router.get("/test", async (req, res, next) => {
+  try {
+    const uid = req.body.uid;
+    console.log('[User] get-user-profile uid', uid)
+    const user = await User.findOne({ uid });
+
+    console.log('[User] get-user-profile', JSON.stringify(user, null, 2))
+
+    return res.sendSuccess(user);
+
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

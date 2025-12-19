@@ -84,6 +84,7 @@ const productSchema = new mongoose.Schema({
 
   created_at: Date,
   updated_at: Date,
+  updated_by: String,
 });
 
 export default mongoose.model("Product", productSchema);

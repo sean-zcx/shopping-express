@@ -27,6 +27,8 @@ const productVariantSchema = new mongoose.Schema(
     original_price: { type: Number, default: null },
     sale_price: { type: Number, default: null },
 
+    gallery: { type: [String], default: [] },
+
     // 是否可购买
     available: { type: Boolean, default: false },
 
